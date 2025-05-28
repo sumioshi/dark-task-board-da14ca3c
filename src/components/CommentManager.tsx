@@ -13,15 +13,15 @@ interface CommentManagerProps {
 
 const CommentManager: React.FC<CommentManagerProps> = ({ comments, onCommentsChange }) => {
   const [newComment, setNewComment] = useState('');
-  const { user } = useAuth();
+  const { user, username } = useAuth();
 
   const addComment = () => {
-    if (!newComment.trim() || !user) return;
+    if (!newComment.trim() || !user || !username) return;
     
     const comment: Comment = {
       id: Date.now(),
       text: newComment.trim(),
-      author: user.username,
+      author: username,
       createdAt: new Date().toISOString(),
     };
     
@@ -58,7 +58,7 @@ const CommentManager: React.FC<CommentManagerProps> = ({ comments, onCommentsCha
                   <span className="text-xs font-medium text-gray-300">{comment.author}</span>
                   <span className="text-xs text-gray-500">{formatTime(comment.createdAt)}</span>
                 </div>
-                {user?.username === comment.author && (
+                {username === comment.author && (
                   <Button
                     variant="ghost"
                     size="sm"
