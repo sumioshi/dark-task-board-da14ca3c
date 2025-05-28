@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +46,8 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate, children 
       assignedUser: assignedUser || undefined,
       dueDate: dueDate || undefined,
       subtasks: [],
+      comments: [],
+      totalTime: 0,
       createdAt: new Date().toISOString(),
     });
     
