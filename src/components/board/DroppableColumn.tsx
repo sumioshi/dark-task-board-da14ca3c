@@ -4,6 +4,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Task, TaskStatus } from '@/types';
 import DraggableTaskCard from './DraggableTaskCard';
+import CreateTaskForm from '../CreateTaskForm';
 import { Plus } from 'lucide-react';
 
 interface DroppableColumnProps {
@@ -11,7 +12,7 @@ interface DroppableColumnProps {
   tasks: Task[];
   status: TaskStatus;
   onDelete: (id: number) => void;
-  count?: number;
+  onTaskCreate: (task: Omit<Task, 'id'>) => void;
 }
 
 const DroppableColumn: React.FC<DroppableColumnProps> = ({ 
@@ -19,7 +20,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
   tasks, 
   status,
   onDelete,
-  count
+  onTaskCreate
 }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: status,
@@ -27,6 +28,10 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
 
   const filteredTasks = tasks.filter(task => task.status === status);
   const taskIds = filteredTasks.map(task => task.id);
+
+  const handleTaskCreate = (newTask: Omit<Task, 'id'>) => {
+    onTaskCreate({ ...newTask, status });
+  };
 
   const getColumnColor = (status: string) => {
     switch(status) {
@@ -59,7 +64,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-gradient-to-b ${getColumnColor(status)} rounded-xl border ${getColumnColor(status)} backdrop-blur-sm transition-all duration-200 ${isOver ? 'ring-2 ring-purple-500/50 scale-[1.02]' : ''}`}>
+    <div className={`flex flex-col h-full bg-gradient-to-b ${getColumnColor(status)} rounded-xl border backdrop-blur-sm transition-all duration-200 ${isOver ? 'ring-2 ring-purple-500/50 scale-[1.02]' : ''}`}>
       <div className="flex items-center justify-between p-4 pb-2">
         <div className="flex items-center space-x-2">
           <h2 className={`font-semibold text-sm ${getHeaderColor(status)}`}>
@@ -69,9 +74,11 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
             {filteredTasks.length}
           </span>
         </div>
-        <button className="text-gray-500 hover:text-gray-400 transition-colors p-1">
-          <Plus className="h-4 w-4" />
-        </button>
+        <CreateTaskForm onTaskCreate={handleTaskCreate}>
+          <button className="text-gray-500 hover:text-gray-400 transition-colors p-1 rounded hover:bg-gray-700/30">
+            <Plus className="h-4 w-4" />
+          </button>
+        </CreateTaskForm>
       </div>
       
       <div 

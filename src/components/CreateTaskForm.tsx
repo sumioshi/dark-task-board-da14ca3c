@@ -19,7 +19,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
+import { Plus, User, Calendar } from 'lucide-react';
 import { Task, TaskStatus } from '@/types';
 
 interface CreateTaskFormProps {
@@ -32,6 +32,8 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate, children 
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [status, setStatus] = useState<TaskStatus>('BACKLOG');
+  const [assignedUser, setAssignedUser] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +44,18 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate, children 
       titulo,
       descricao,
       status,
+      assignedUser: assignedUser || undefined,
+      dueDate: dueDate || undefined,
+      subtasks: [],
+      createdAt: new Date().toISOString(),
     });
     
     // Reset form
     setTitulo('');
     setDescricao('');
     setStatus('BACKLOG');
+    setAssignedUser('');
+    setDueDate('');
     setOpen(false);
   };
 
@@ -81,6 +89,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate, children 
               required
             />
           </div>
+          
           <div className="space-y-2">
             <label htmlFor="descricao" className="text-sm font-medium text-gray-200">
               Descrição
@@ -90,9 +99,40 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate, children 
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Adicione uma descrição..."
-              className="bg-gray-800/70 border-gray-700 focus:ring-purple-500 focus:border-purple-500 min-h-[100px]"
+              className="bg-gray-800/70 border-gray-700 focus:ring-purple-500 focus:border-purple-500 min-h-[80px]"
             />
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label htmlFor="assignedUser" className="text-sm font-medium text-gray-200 flex items-center gap-1">
+                <User className="h-3 w-3" />
+                Usuário
+              </label>
+              <Input
+                id="assignedUser"
+                value={assignedUser}
+                onChange={(e) => setAssignedUser(e.target.value)}
+                placeholder="Nome do usuário"
+                className="bg-gray-800/70 border-gray-700 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="dueDate" className="text-sm font-medium text-gray-200 flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Data limite
+              </label>
+              <Input
+                id="dueDate"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="bg-gray-800/70 border-gray-700 focus:ring-purple-500 focus:border-purple-500"
+              />
+            </div>
+          </div>
+          
           <div className="space-y-2">
             <label htmlFor="status" className="text-sm font-medium text-gray-200">
               Status
@@ -115,6 +155,7 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate, children 
               </SelectContent>
             </Select>
           </div>
+          
           <DialogFooter>
             <Button 
               type="submit"

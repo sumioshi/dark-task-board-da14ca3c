@@ -1,4 +1,3 @@
-
 import { Task, AuthResponse } from '../types';
 
 const API_URL = 'http://localhost:8000/api'; // We'll replace this with your actual Django API URL
@@ -128,7 +127,9 @@ export const createTask = async (token: string, task: Omit<Task, 'id'>): Promise
     // Create new task with ID
     const newTask: Task = {
       ...task,
-      id: Date.now() // Simple ID generation for mock
+      id: Date.now(), // Simple ID generation for mock
+      subtasks: task.subtasks || [],
+      createdAt: task.createdAt || new Date().toISOString(),
     };
     
     // Save to localStorage

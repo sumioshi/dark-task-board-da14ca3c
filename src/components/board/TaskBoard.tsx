@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
@@ -36,7 +35,13 @@ const TaskBoard: React.FC = () => {
     setIsLoading(true);
     try {
       const data = await fetchTasks(user.token);
-      setTasks(data);
+      // Ensure backward compatibility with existing tasks
+      const normalizedTasks = data.map(task => ({
+        ...task,
+        subtasks: task.subtasks || [],
+        createdAt: task.createdAt || new Date().toISOString(),
+      }));
+      setTasks(normalizedTasks);
     } catch (error) {
       console.error('Failed to load tasks:', error);
       toast({
@@ -156,6 +161,7 @@ const TaskBoard: React.FC = () => {
                 tasks={tasks}
                 status={column.id}
                 onDelete={handleTaskDelete}
+                onTaskCreate={handleTaskCreate}
               />
             ))}
           </div>
