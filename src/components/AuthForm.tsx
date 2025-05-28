@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { signInUser, signUpUser } from '@/services/supabaseApi';
 import { useAuth } from '@/contexts/AuthContext';
+import { cleanupAuthState } from '@/utils/authCleanup';
+import { supabase } from '@/integrations/supabase/client';
 import { Mail, Lock, User, LogIn, UserPlus, Loader2 } from 'lucide-react';
 
 const AuthForm: React.FC = () => {
@@ -24,6 +25,17 @@ const AuthForm: React.FC = () => {
 
     setLoading(true);
     try {
+      // Clean up existing state
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log('Global signout failed, continuing...');
+      }
+
       const { user } = await signInUser(email, password);
       if (user) {
         login(user.email || '', user.id);
@@ -31,6 +43,10 @@ const AuthForm: React.FC = () => {
           title: "Login realizado com sucesso!",
           description: "Bem-vindo de volta!",
         });
+        // Force page reload for clean state
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
       }
     } catch (error: any) {
       toast({
@@ -49,17 +65,40 @@ const AuthForm: React.FC = () => {
 
     setLoading(true);
     try {
+      // Clean up existing state before signup
+      cleanupAuthState();
+      
+      // Attempt global sign out
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log('Global signout failed, continuing...');
+      }
+
       await signUpUser(email, password, username);
       toast({
         title: "Conta criada com sucesso!",
-        description: "Você pode fazer login agora.",
+        description: "Verifique seu email para confirmar a conta.",
       });
+      // Clear form
+      setEmail('');
+      setPassword('');
+      setUsername('');
     } catch (error: any) {
-      toast({
-        title: "Erro no cadastro",
-        description: error.message || "Erro ao criar conta",
-        variant: "destructive",
-      });
+      if (error.message?.includes('rate limit') || error.message?.includes('429')) {
+        toast({
+          title: "Muitas tentativas",
+          description: "Aguarde alguns minutos antes de tentar novamente.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erro no cadastro",
+          description: error.message || "Erro ao criar conta",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
