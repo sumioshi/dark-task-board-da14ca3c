@@ -34,11 +34,7 @@ export interface Column {
   order: number;
 }
 
-export interface User {
-  username: string;
-  token: string;
-}
-
+// Remove the custom User interface to avoid conflicts with Supabase User type
 export interface AuthResponse {
   token: string;
   username: string;

@@ -66,9 +66,18 @@ export const fetchTasks = async (): Promise<Task[]> => {
     status: task.status as TaskStatus,
     assignedUser: task.assigned_user,
     dueDate: task.due_date,
-    subtasks: task.subtasks || [],
-    comments: task.comments || [],
-    totalTime: task.total_time,
+    subtasks: (task.subtasks || []).map((subtask: any) => ({
+      id: subtask.id,
+      titulo: subtask.titulo,
+      completed: subtask.completed || false,
+    })),
+    comments: (task.comments || []).map((comment: any) => ({
+      id: comment.id,
+      text: comment.text,
+      author: comment.author,
+      createdAt: comment.created_at,
+    })),
+    totalTime: task.total_time || 0,
     createdAt: task.created_at,
   }));
 };
@@ -102,7 +111,7 @@ export const createTask = async (task: Omit<Task, 'id'>): Promise<Task> => {
     dueDate: data.due_date,
     subtasks: [],
     comments: [],
-    totalTime: data.total_time,
+    totalTime: data.total_time || 0,
     createdAt: data.created_at,
   };
 };
@@ -157,7 +166,7 @@ export const createSubtask = async (taskId: number, titulo: string): Promise<Sub
   return {
     id: data.id,
     titulo: data.titulo,
-    completed: data.completed,
+    completed: data.completed || false,
   };
 };
 

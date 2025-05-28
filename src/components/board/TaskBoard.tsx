@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCenter } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
@@ -22,7 +23,7 @@ const TaskBoard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, username, logout, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -218,6 +219,7 @@ const TaskBoard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <BoardHeader 
         user={user} 
+        username={username}
         onTaskCreate={handleTaskCreate} 
         onLogout={logout} 
       />
