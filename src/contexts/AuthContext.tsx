@@ -11,6 +11,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   username: string | null;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,34 +21,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         setIsAuthenticated(!!session);
         
-        // Get username from user metadata
+        // Get username from user metadata or fetch from profiles
         if (session?.user) {
-          setUsername(session.user.user_metadata?.username || session.user.email || 'Usuário');
+          let userDisplayName = session.user.user_metadata?.username || session.user.email || 'Usuário';
+          
+          // Try to get username from profiles table if available
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('username')
+              .eq('id', session.user.id)
+              .maybeSingle();
+            
+            if (profile?.username) {
+              userDisplayName = profile.username;
+            }
+          } catch (error) {
+            console.log('Could not fetch profile, using metadata username');
+          }
+          
+          setUsername(userDisplayName);
         } else {
           setUsername(null);
         }
+        
+        setLoading(false);
       }
     );
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session check:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsAuthenticated(!!session);
-      
-      if (session?.user) {
-        setUsername(session.user.user_metadata?.username || session.user.email || 'Usuário');
+      // The onAuthStateChange will handle setting the state
+      if (!session) {
+        setLoading(false);
       }
     });
 
@@ -61,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     console.log('Logout called');
+    setLoading(true);
     try {
       // Clean up auth state
       cleanupAuthState();
@@ -83,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, login, logout, isAuthenticated, username }}>
+    <AuthContext.Provider value={{ user, session, login, logout, isAuthenticated, username, loading }}>
       {children}
     </AuthContext.Provider>
   );

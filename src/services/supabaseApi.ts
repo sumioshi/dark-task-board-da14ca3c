@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskStatus, Subtask, Comment } from '@/types';
 
@@ -15,19 +14,6 @@ export const signUpUser = async (email: string, password: string, username: stri
   });
 
   if (error) throw error;
-
-  if (data.user) {
-    // Create profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: data.user.id,
-        username,
-      });
-
-    if (profileError) throw profileError;
-  }
-
   return data;
 };
 
@@ -48,6 +34,12 @@ export const signOutUser = async () => {
 
 // Task APIs
 export const fetchTasks = async (): Promise<Task[]> => {
+  // Check if user is authenticated before making request
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    throw new Error('User not authenticated');
+  }
+
   const { data: tasks, error } = await supabase
     .from('tasks')
     .select(`

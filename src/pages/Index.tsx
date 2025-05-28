@@ -2,11 +2,26 @@
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import AuthForm from '@/components/AuthForm';
-import TaskBoard from '@/components/TaskBoard';
-import { KanbanSquare, CheckSquare, Users, Zap } from 'lucide-react';
+import TaskBoard from '@/components/board/TaskBoard';
+import { KanbanSquare, CheckSquare, Users, Zap, Loader2 } from 'lucide-react';
 
 const Index = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center space-x-2">
+            <KanbanSquare className="h-8 w-8 text-purple-500 animate-pulse" />
+            <Loader2 className="h-8 w-8 text-purple-500 animate-spin" />
+          </div>
+          <div className="text-xl text-white font-medium">Carregando...</div>
+          <div className="text-gray-400 text-sm">Verificando autenticação</div>
+        </div>
+      </div>
+    );
+  }
 
   if (isAuthenticated) {
     return <TaskBoard />;
