@@ -7,6 +7,13 @@ export interface Subtask {
   completed: boolean;
 }
 
+export interface Comment {
+  id: number;
+  text: string;
+  author: string;
+  createdAt: string;
+}
+
 export interface Task {
   id: number;
   titulo: string;
@@ -15,7 +22,16 @@ export interface Task {
   assignedUser?: string;
   dueDate?: string;
   subtasks: Subtask[];
+  comments: Comment[];
+  totalTime: number; // em minutos
   createdAt: string;
+}
+
+export interface Column {
+  id: string;
+  title: string;
+  status: TaskStatus;
+  order: number;
 }
 
 export interface User {

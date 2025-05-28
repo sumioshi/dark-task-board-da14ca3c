@@ -1,23 +1,27 @@
-
 import React, { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X, GripVertical, Calendar, User, CheckSquare, Edit } from 'lucide-react';
+import { X, GripVertical, Calendar, User, CheckSquare, Edit, MessageCircle, Clock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import SubtaskManager from '../SubtaskManager';
+import CommentManager from '../CommentManager';
+import TimeTracker from '../TimeTracker';
 
 interface DraggableTaskCardProps {
   task: Task;
   onDelete: (id: number) => void;
+  onTaskUpdate?: (task: Task) => void;
 }
 
-const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({ task, onDelete }) => {
+const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({ task, onDelete, onTaskUpdate }) => {
   const { toast } = useToast();
   const [showDetails, setShowDetails] = useState(false);
   const [subtasks, setSubtasks] = useState(task.subtasks || []);
+  const [comments, setComments] = useState(task.comments || []);
+  const [totalTime, setTotalTime] = useState(task.totalTime || 0);
   
   const {
     attributes,
@@ -40,6 +44,17 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({ task, onDelete })
       title: "Tarefa Excluída",
       description: `A tarefa "${task.titulo}" foi removida.`,
     });
+  };
+
+  const handleTaskUpdate = () => {
+    if (onTaskUpdate) {
+      onTaskUpdate({
+        ...task,
+        subtasks,
+        comments,
+        totalTime,
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -74,6 +89,13 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({ task, onDelete })
   const isOverdue = (dateString?: string) => {
     if (!dateString) return false;
     return new Date(dateString) < new Date();
+  };
+
+  const formatTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours === 0) return `${mins}m`;
+    return `${hours}h ${mins}m`;
   };
 
   const completedSubtasks = subtasks.filter(s => s.completed).length;
@@ -136,13 +158,26 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({ task, onDelete })
             </div>
           </div>
         )}
-        
+
+        {/* Bottom info row */}
         <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center space-x-2 text-gray-500">
+          <div className="flex items-center space-x-3 text-gray-500">
             {task.dueDate && (
               <div className={`flex items-center gap-1 ${isOverdue(task.dueDate) ? 'text-red-400' : ''}`}>
                 <Calendar className="h-3 w-3" />
                 <span>{formatDate(task.dueDate)}</span>
+              </div>
+            )}
+            {comments.length > 0 && (
+              <div className="flex items-center gap-1">
+                <MessageCircle className="h-3 w-3" />
+                <span>{comments.length}</span>
+              </div>
+            )}
+            {totalTime > 0 && (
+              <div className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                <span>{formatTime(totalTime)}</span>
               </div>
             )}
           </div>
@@ -160,15 +195,20 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({ task, onDelete })
       </div>
 
       {/* Task Details Modal */}
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="card-glass border-purple-500/30 sm:max-w-[500px]">
+      <Dialog open={showDetails} onOpenChange={(open) => {
+        setShowDetails(open);
+        if (!open) {
+          handleTaskUpdate();
+        }
+      }}>
+        <DialogContent className="card-glass border-purple-500/30 sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="h-4 w-4" />
               {task.titulo}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-6 py-4">
             {task.descricao && (
               <div>
                 <h4 className="text-sm font-medium text-gray-200 mb-2">Descrição</h4>
@@ -201,10 +241,26 @@ const DraggableTaskCard: React.FC<DraggableTaskCardProps> = ({ task, onDelete })
             </div>
 
             <div>
-              <h4 className="text-sm font-medium text-gray-200 mb-2">Subtarefas</h4>
+              <h4 className="text-sm font-medium text-gray-200 mb-3">Controle de Tempo</h4>
+              <TimeTracker totalTime={totalTime} onTimeChange={setTotalTime} />
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium text-gray-200 mb-3">Subtarefas</h4>
               <SubtaskManager
                 subtasks={subtasks}
                 onSubtasksChange={setSubtasks}
+              />
+            </div>
+
+            <div>
+              <h4 className="text-sm font-medium text-gray-200 mb-3 flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Comentários ({comments.length})
+              </h4>
+              <CommentManager
+                comments={comments}
+                onCommentsChange={setComments}
               />
             </div>
           </div>

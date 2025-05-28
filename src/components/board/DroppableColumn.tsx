@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -13,6 +12,7 @@ interface DroppableColumnProps {
   status: TaskStatus;
   onDelete: (id: number) => void;
   onTaskCreate: (task: Omit<Task, 'id'>) => void;
+  onTaskUpdate?: (task: Task) => void;
 }
 
 const DroppableColumn: React.FC<DroppableColumnProps> = ({ 
@@ -20,7 +20,8 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
   tasks, 
   status,
   onDelete,
-  onTaskCreate
+  onTaskCreate,
+  onTaskUpdate
 }) => {
   const { isOver, setNodeRef } = useDroppable({
     id: status,
@@ -30,7 +31,12 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
   const taskIds = filteredTasks.map(task => task.id);
 
   const handleTaskCreate = (newTask: Omit<Task, 'id'>) => {
-    onTaskCreate({ ...newTask, status });
+    onTaskCreate({ 
+      ...newTask, 
+      status,
+      comments: [],
+      totalTime: 0,
+    });
   };
 
   const getColumnColor = (status: string) => {
@@ -48,32 +54,12 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
     }
   };
 
-  const getHeaderColor = (status: string) => {
-    switch(status) {
-      case 'BACKLOG':
-        return 'text-gray-400';
-      case 'TODO':
-        return 'text-blue-400';
-      case 'IN_PROGRESS':
-        return 'text-yellow-400';
-      case 'DONE':
-        return 'text-green-400';
-      default:
-        return 'text-gray-400';
-    }
-  };
-
   return (
-    <div className={`flex flex-col h-full bg-gradient-to-b ${getColumnColor(status)} rounded-xl border backdrop-blur-sm transition-all duration-200 ${isOver ? 'ring-2 ring-purple-500/50 scale-[1.02]' : ''}`}>
-      <div className="flex items-center justify-between p-4 pb-2">
-        <div className="flex items-center space-x-2">
-          <h2 className={`font-semibold text-sm ${getHeaderColor(status)}`}>
-            {title}
-          </h2>
-          <span className="bg-gray-700/50 text-gray-300 text-xs px-2 py-1 rounded-full">
-            {filteredTasks.length}
-          </span>
-        </div>
+    <div className="flex flex-col flex-1">
+      <div className="flex items-center justify-between px-4 pb-2">
+        <span className="bg-gray-700/50 text-gray-300 text-xs px-2 py-1 rounded-full">
+          {filteredTasks.length}
+        </span>
         <CreateTaskForm onTaskCreate={handleTaskCreate}>
           <button className="text-gray-500 hover:text-gray-400 transition-colors p-1 rounded hover:bg-gray-700/30">
             <Plus className="h-4 w-4" />
@@ -83,7 +69,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
       
       <div 
         ref={setNodeRef}
-        className="flex-1 p-4 pt-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent"
+        className={`flex-1 p-4 pt-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent transition-all duration-200 ${isOver ? 'bg-gray-700/20' : ''}`}
         style={{ minHeight: '200px' }}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
@@ -99,6 +85,7 @@ const DroppableColumn: React.FC<DroppableColumnProps> = ({
                 key={task.id} 
                 task={task}
                 onDelete={onDelete}
+                onTaskUpdate={onTaskUpdate}
               />
             ))
           )}
