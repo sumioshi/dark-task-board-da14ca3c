@@ -9,13 +9,15 @@ interface TaskColumnProps {
   status: string;
   onStatusChange: (id: number, newStatus: string) => void;
   onDelete: (id: number) => void;
+  onTaskCreate: (task: Omit<Task, 'id'>) => void;
 }
 
 const TaskColumn: React.FC<TaskColumnProps> = ({ 
   title, 
   tasks, 
   status,
-  onDelete
+  onDelete,
+  onTaskCreate
 }) => {
   return (
     <DroppableColumn
@@ -23,6 +25,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
       tasks={tasks}
       status={status as TaskStatus}
       onDelete={onDelete}
+      onTaskCreate={onTaskCreate}
     />
   );
 };
