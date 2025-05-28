@@ -9,7 +9,154 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      columns: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_index: number
+          status: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          order_index: number
+          status: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_index?: number
+          status?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      comments: {
+        Row: {
+          author: string
+          created_at: string | null
+          id: number
+          task_id: number
+          text: string
+        }
+        Insert: {
+          author: string
+          created_at?: string | null
+          id?: number
+          task_id: number
+          text: string
+        }
+        Update: {
+          author?: string
+          created_at?: string | null
+          id?: number
+          task_id?: number
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      subtasks: {
+        Row: {
+          completed: boolean | null
+          created_at: string | null
+          id: number
+          task_id: number
+          titulo: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: number
+          task_id: number
+          titulo: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string | null
+          id?: number
+          task_id?: number
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subtasks_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assigned_user: string | null
+          created_at: string | null
+          descricao: string | null
+          due_date: string | null
+          id: number
+          status: string
+          titulo: string
+          total_time: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_user?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          due_date?: string | null
+          id?: number
+          status: string
+          titulo: string
+          total_time?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_user?: string | null
+          created_at?: string | null
+          descricao?: string | null
+          due_date?: string | null
+          id?: number
+          status?: string
+          titulo?: string
+          total_time?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

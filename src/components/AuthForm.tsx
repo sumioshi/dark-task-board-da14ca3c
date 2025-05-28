@@ -1,174 +1,221 @@
 
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
-import { loginUser, registerUser } from '@/services/api';
+import { signInUser, signUpUser } from '@/services/supabaseApi';
 import { useAuth } from '@/contexts/AuthContext';
+import { Mail, Lock, User, LogIn, UserPlus, Loader2 } from 'lucide-react';
 
 const AuthForm: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { toast } = useToast();
+  const [username, setUsername] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
+    if (!email || !password) return;
+
+    setLoading(true);
     try {
-      const data = await loginUser(username, password);
-      login(data.username, data.token);
-      
+      const { user } = await signInUser(email, password);
+      if (user) {
+        login(user.email || '', user.id);
+        toast({
+          title: "Login realizado com sucesso!",
+          description: "Bem-vindo de volta!",
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Login realizado com sucesso",
-        description: `Bem-vindo de volta, ${data.username}!`,
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao fazer login",
-        description: "Verifique suas credenciais e tente novamente.",
+        title: "Erro no login",
+        description: error.message || "Credenciais inválidas",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
+    if (!email || !password || !username) return;
+
+    setLoading(true);
     try {
-      const data = await registerUser(username, password);
-      login(data.username, data.token);
-      
+      await signUpUser(email, password, username);
       toast({
-        title: "Registro realizado com sucesso",
-        description: "Sua conta foi criada e você foi conectado automaticamente.",
+        title: "Conta criada com sucesso!",
+        description: "Você pode fazer login agora.",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
-        title: "Erro ao registrar",
-        description: "Não foi possível criar sua conta. Tente com outro nome de usuário.",
+        title: "Erro no cadastro",
+        description: error.message || "Erro ao criar conta",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Card className="w-[350px] card-glass animate-pulse-glow">
-      <Tabs defaultValue="login">
-        <TabsList className="grid w-full grid-cols-2 bg-gray-800/50">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="register">Registrar</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="login">
-          <form onSubmit={handleLogin}>
-            <CardHeader>
-              <CardTitle>Entrar</CardTitle>
-              <CardDescription>
-                Entre com seu nome de usuário e senha.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="username" className="text-sm">Nome de usuário</label>
-                <Input 
-                  id="username"
-                  type="text"
-                  placeholder="Digite seu nome de usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-gray-800/70 border-gray-700"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm">Senha</label>
-                <Input 
-                  id="password"
-                  type="password"
-                  placeholder="Digite sua senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-gray-800/70 border-gray-700"
-                  required
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                type="submit"
-                className="w-full bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600"
-                disabled={isLoading}
-              >
-                {isLoading ? "Entrando..." : "Entrar"}
-              </Button>
-            </CardFooter>
-          </form>
-        </TabsContent>
-        
-        <TabsContent value="register">
-          <form onSubmit={handleRegister}>
-            <CardHeader>
-              <CardTitle>Criar Conta</CardTitle>
-              <CardDescription>
-                Crie uma nova conta para começar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="new-username" className="text-sm">Nome de usuário</label>
-                <Input 
-                  id="new-username"
-                  type="text"
-                  placeholder="Escolha um nome de usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-gray-800/70 border-gray-700"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="new-password" className="text-sm">Senha</label>
-                <Input 
-                  id="new-password"
-                  type="password"
-                  placeholder="Escolha uma senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-gray-800/70 border-gray-700"
-                  required
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                type="submit"
-                className="w-full bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600"
-                disabled={isLoading}
-              >
-                {isLoading ? "Registrando..." : "Registrar"}
-              </Button>
-            </CardFooter>
-          </form>
-        </TabsContent>
-      </Tabs>
-    </Card>
+    <div className="w-full max-w-md mx-auto">
+      <Card className="border-gray-700/50 bg-gray-900/80 backdrop-blur-sm shadow-2xl">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            Kanban Board
+          </CardTitle>
+          <CardDescription className="text-gray-400">
+            Entre na sua conta ou crie uma nova
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-800/50">
+              <TabsTrigger value="signin" className="data-[state=active]:bg-purple-600">
+                <LogIn className="w-4 h-4 mr-2" />
+                Entrar
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:bg-purple-600">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Cadastrar
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="signin" className="space-y-4 mt-6">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email" className="text-gray-200">
+                    Email
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10 bg-gray-800/70 border-gray-600 focus:border-purple-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password" className="text-gray-200">
+                    Senha
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signin-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 bg-gray-800/70 border-gray-600 focus:border-purple-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <LogIn className="w-4 h-4 mr-2" />
+                  )}
+                  Entrar
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="signup" className="space-y-4 mt-6">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-username" className="text-gray-200">
+                    Nome de usuário
+                  </Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signup-username"
+                      type="text"
+                      placeholder="seu_usuario"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="pl-10 bg-gray-800/70 border-gray-600 focus:border-purple-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email" className="text-gray-200">
+                    Email
+                  </Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10 bg-gray-800/70 border-gray-600 focus:border-purple-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password" className="text-gray-200">
+                    Senha
+                  </Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 bg-gray-800/70 border-gray-600 focus:border-purple-500"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <UserPlus className="w-4 h-4 mr-2" />
+                  )}
+                  Criar Conta
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

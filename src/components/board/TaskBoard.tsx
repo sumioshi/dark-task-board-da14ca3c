@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCenter } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchTasks, createTask, updateTaskStatus, deleteTask } from '@/services/api';
+import { fetchTasks, createTask, updateTaskStatus, deleteTask } from '@/services/supabaseApi';
 import { Task, TaskStatus, Column } from '@/types';
 import DroppableColumn from './DroppableColumn';
 import DraggableTaskCard from './DraggableTaskCard';
 import BoardHeader from './BoardHeader';
 import { ColumnHeader, AddColumnButton } from './ColumnManager';
 import { useToast } from '@/components/ui/use-toast';
+import { KanbanSquare, Loader2 } from 'lucide-react';
 
 const TaskBoard: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -22,29 +22,20 @@ const TaskBoard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       loadTasks();
     }
-  }, [user]);
+  }, [isAuthenticated]);
 
   const loadTasks = async () => {
-    if (!user) return;
-    
     setIsLoading(true);
     try {
-      const data = await fetchTasks(user.token);
-      const normalizedTasks = data.map(task => ({
-        ...task,
-        subtasks: task.subtasks || [],
-        comments: task.comments || [],
-        totalTime: task.totalTime || 0,
-        createdAt: task.createdAt || new Date().toISOString(),
-      }));
-      setTasks(normalizedTasks);
+      const data = await fetchTasks();
+      setTasks(data);
     } catch (error) {
       console.error('Failed to load tasks:', error);
       toast({
@@ -58,15 +49,8 @@ const TaskBoard: React.FC = () => {
   };
 
   const handleTaskCreate = async (newTask: Omit<Task, 'id'>) => {
-    if (!user) return;
-    
     try {
-      const taskWithDefaults = {
-        ...newTask,
-        comments: [],
-        totalTime: 0,
-      };
-      const createdTask = await createTask(user.token, taskWithDefaults);
+      const createdTask = await createTask(newTask);
       setTasks((prev) => [...prev, createdTask]);
       toast({
         title: "Tarefa criada",
@@ -89,11 +73,13 @@ const TaskBoard: React.FC = () => {
   };
 
   const handleTaskDelete = async (id: number) => {
-    if (!user) return;
-    
     try {
-      await deleteTask(user.token, id);
+      await deleteTask(id);
       setTasks((prev) => prev.filter((task) => task.id !== id));
+      toast({
+        title: "Tarefa excluída",
+        description: "Tarefa removida com sucesso.",
+      });
     } catch (error) {
       console.error('Failed to delete task:', error);
       toast({
@@ -163,7 +149,7 @@ const TaskBoard: React.FC = () => {
     setActiveTask(null);
     setActiveColumn(null);
 
-    if (!over || !user) return;
+    if (!over || !isAuthenticated) return;
 
     // Handle column reordering
     if (active.id.toString().startsWith('column-') && over.id.toString().startsWith('column-')) {
@@ -192,7 +178,7 @@ const TaskBoard: React.FC = () => {
     ));
 
     try {
-      await updateTaskStatus(user.token, taskId, newStatus);
+      await updateTaskStatus(taskId, newStatus);
       const column = columns.find(c => c.status === newStatus);
       toast({
         title: "Status atualizado",
@@ -213,10 +199,14 @@ const TaskBoard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center space-x-2">
+            <KanbanSquare className="h-8 w-8 text-purple-500 animate-pulse" />
+            <Loader2 className="h-8 w-8 text-purple-500 animate-spin" />
+          </div>
           <div className="text-xl text-white font-medium">Carregando tarefas...</div>
+          <div className="text-gray-400 text-sm">Conectando ao banco de dados</div>
         </div>
       </div>
     );
@@ -232,24 +222,26 @@ const TaskBoard: React.FC = () => {
         onLogout={logout} 
       />
       
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 lg:p-6">
         <DndContext 
           onDragStart={handleDragStart} 
           onDragEnd={handleDragEnd}
           collisionDetection={closestCenter}
         >
-          <div className="flex gap-6 overflow-x-auto pb-4">
+          <div className="flex gap-4 lg:gap-6 overflow-x-auto pb-4 min-h-[calc(100vh-140px)]">
             <SortableContext 
               items={sortedColumns.map(col => `column-${col.id}`)} 
               strategy={horizontalListSortingStrategy}
             >
               {sortedColumns.map((column) => (
-                <div key={column.id} className="flex-shrink-0 w-80">
-                  <div className="flex flex-col h-[calc(100vh-200px)] bg-gradient-to-b from-gray-600/20 to-gray-700/20 rounded-xl border border-gray-600/30 backdrop-blur-sm">
+                <div key={column.id} className="flex-shrink-0 w-72 lg:w-80">
+                  <div className="flex flex-col h-[calc(100vh-160px)] bg-gradient-to-b from-gray-600/20 to-gray-700/20 rounded-xl border border-gray-600/30 backdrop-blur-sm shadow-lg">
                     <ColumnHeader
                       column={column}
-                      onRename={handleColumnRename}
-                      onDelete={handleColumnDelete}
+                      onRename={(id, title) => setColumns(prev => prev.map(col => 
+                        col.id === id ? { ...col, title } : col
+                      ))}
+                      onDelete={(id) => setColumns(prev => prev.filter(col => col.id !== id))}
                     />
                     <DroppableColumn
                       title={column.title}
@@ -264,21 +256,30 @@ const TaskBoard: React.FC = () => {
               ))}
             </SortableContext>
             
-            <div className="flex-shrink-0 w-80">
-              <AddColumnButton onAddColumn={handleAddColumn} />
+            <div className="flex-shrink-0 w-72 lg:w-80">
+              <AddColumnButton onAddColumn={(title) => {
+                const newId = `CUSTOM_${Date.now()}`;
+                const newColumn: Column = {
+                  id: newId,
+                  title,
+                  status: newId as TaskStatus,
+                  order: columns.length,
+                };
+                setColumns(prev => [...prev, newColumn]);
+              }} />
             </div>
           </div>
           
           <DragOverlay>
             {activeTask ? (
-              <div className="rotate-2 scale-105">
+              <div className="rotate-2 scale-105 shadow-2xl">
                 <DraggableTaskCard
                   task={activeTask}
                   onDelete={() => {}}
                 />
               </div>
             ) : activeColumn ? (
-              <div className="w-80 h-32 bg-gradient-to-b from-gray-600/40 to-gray-700/40 rounded-xl border border-gray-600/50 backdrop-blur-sm flex items-center justify-center">
+              <div className="w-80 h-32 bg-gradient-to-b from-gray-600/40 to-gray-700/40 rounded-xl border border-gray-600/50 backdrop-blur-sm flex items-center justify-center shadow-2xl">
                 <span className="text-gray-300 font-medium">{activeColumn.title}</span>
               </div>
             ) : null}
