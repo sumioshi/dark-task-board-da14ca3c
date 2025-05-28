@@ -24,9 +24,10 @@ import { Task, TaskStatus } from '@/types';
 
 interface CreateTaskFormProps {
   onTaskCreate: (task: Omit<Task, 'id'>) => void;
+  children?: React.ReactNode;
 }
 
-const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate }) => {
+const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate, children }) => {
   const [open, setOpen] = useState(false);
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
@@ -53,9 +54,11 @@ const CreateTaskForm: React.FC<CreateTaskFormProps> = ({ onTaskCreate }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="glow-border bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600">
-          <Plus className="mr-1 h-4 w-4" /> Nova Tarefa
-        </Button>
+        {children || (
+          <Button className="glow-border bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600">
+            <Plus className="mr-1 h-4 w-4" /> Nova Tarefa
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="card-glass border-purple-500/30 sm:max-w-[425px]">
         <DialogHeader>
