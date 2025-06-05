@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import AuthForm from '@/components/AuthForm';
 import TaskBoard from '@/components/board/TaskBoard';
 import { KanbanSquare, CheckSquare, Users, Zap, Loader2 } from 'lucide-react';
+import { SparklesCore } from '@/components/ui/sparkles';
 
 const Index = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -28,14 +29,32 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col">
+      {/* Background Sparkles */}
+      <div className="absolute inset-0 w-full h-full">
+        <SparklesCore
+          id="landing-page-sparkles"
+          background="transparent"
+          minSize={0.4}
+          maxSize={1.6}
+          particleDensity={50}
+          className="w-full h-full"
+          particleColor="#8b5cf6"
+          speed={0.5}
+        />
+      </div>
+      
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90"></div>
+      
+      {/* Content */}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           {/* Left side - Hero content */}
           <div className="text-center lg:text-left space-y-8">
             <div className="space-y-4">
               <div className="flex items-center justify-center lg:justify-start gap-3 mb-6">
-                <div className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl">
+                <div className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl shadow-2xl">
                   <KanbanSquare className="h-8 w-8 text-white" />
                 </div>
                 <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-500 to-indigo-400 bg-clip-text text-transparent">
@@ -57,7 +76,7 @@ const Index = () => {
             {/* Features */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-8">
               <div className="text-center space-y-3">
-                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center shadow-lg">
                   <CheckSquare className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white">Gestão Visual</h3>
@@ -65,7 +84,7 @@ const Index = () => {
               </div>
               
               <div className="text-center space-y-3">
-                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-lg">
                   <Users className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white">Colaboração</h3>
@@ -73,7 +92,7 @@ const Index = () => {
               </div>
               
               <div className="text-center space-y-3">
-                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                <div className="mx-auto w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-lg">
                   <Zap className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white">Tempo Real</h3>
@@ -90,7 +109,7 @@ const Index = () => {
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-6">
+      <footer className="relative z-10 border-t border-gray-800/50 py-6">
         <div className="container mx-auto px-4 text-center text-gray-400">
           <p>&copy; 2024 Kanban Board. Feito com ❤️ para produtividade.</p>
         </div>

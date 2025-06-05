@@ -4,6 +4,7 @@ import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { LogOut, Plus } from 'lucide-react';
 import CreateTaskForm from '../CreateTaskForm';
+import { SparklesCore } from '@/components/ui/sparkles';
 
 interface BoardHeaderProps {
   user: User | null;
@@ -14,8 +15,26 @@ interface BoardHeaderProps {
 
 const BoardHeader: React.FC<BoardHeaderProps> = ({ user, username, onTaskCreate, onLogout }) => {
   return (
-    <div className="sticky top-0 z-10 bg-gradient-to-r from-gray-900/95 to-gray-800/95 backdrop-blur-lg border-b border-gray-700/50 p-6">
-      <div className="container mx-auto flex justify-between items-center">
+    <div className="sticky top-0 z-10 relative overflow-hidden bg-gradient-to-r from-gray-900/95 to-gray-800/95 backdrop-blur-lg border-b border-gray-700/50 p-6">
+      {/* Sparkles Background */}
+      <div className="absolute inset-0 w-full h-full">
+        <SparklesCore
+          id="kanban-header-sparkles"
+          background="transparent"
+          minSize={0.3}
+          maxSize={1.2}
+          particleDensity={80}
+          className="w-full h-full"
+          particleColor="#8b5cf6"
+          speed={0.8}
+        />
+      </div>
+      
+      {/* Gradient overlay to soften the sparkles */}
+      <div className="absolute inset-0 bg-gradient-to-r from-gray-900/80 to-gray-800/80"></div>
+      
+      {/* Content */}
+      <div className="container mx-auto flex justify-between items-center relative z-10">
         <div className="flex items-center space-x-4">
           <div>
             <h1 className="text-2xl font-bold text-white bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">

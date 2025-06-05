@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, closestCenter } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
@@ -11,6 +10,7 @@ import BoardHeader from './BoardHeader';
 import { ColumnHeader, AddColumnButton } from './ColumnManager';
 import { useToast } from '@/components/ui/use-toast';
 import { KanbanSquare, Loader2 } from 'lucide-react';
+import { SparklesCore } from '@/components/ui/sparkles';
 
 const TaskBoard: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -216,77 +216,97 @@ const TaskBoard: React.FC = () => {
   const sortedColumns = [...columns].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <BoardHeader 
-        user={user} 
-        username={username}
-        onTaskCreate={handleTaskCreate} 
-        onLogout={logout} 
-      />
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Background Sparkles */}
+      <div className="absolute inset-0 w-full h-full">
+        <SparklesCore
+          id="taskboard-sparkles"
+          background="transparent"
+          minSize={0.2}
+          maxSize={0.8}
+          particleDensity={30}
+          className="w-full h-full"
+          particleColor="#6366f1"
+          speed={0.3}
+        />
+      </div>
       
-      <div className="container mx-auto p-4 lg:p-6">
-        <DndContext 
-          onDragStart={handleDragStart} 
-          onDragEnd={handleDragEnd}
-          collisionDetection={closestCenter}
-        >
-          <div className="flex gap-4 lg:gap-6 overflow-x-auto pb-4 min-h-[calc(100vh-140px)]">
-            <SortableContext 
-              items={sortedColumns.map(col => `column-${col.id}`)} 
-              strategy={horizontalListSortingStrategy}
-            >
-              {sortedColumns.map((column) => (
-                <div key={column.id} className="flex-shrink-0 w-72 lg:w-80">
-                  <div className="flex flex-col h-[calc(100vh-160px)] bg-gradient-to-b from-gray-600/20 to-gray-700/20 rounded-xl border border-gray-600/30 backdrop-blur-sm shadow-lg">
-                    <ColumnHeader
-                      column={column}
-                      onRename={(id, title) => setColumns(prev => prev.map(col => 
-                        col.id === id ? { ...col, title } : col
-                      ))}
-                      onDelete={(id) => setColumns(prev => prev.filter(col => col.id !== id))}
-                    />
-                    <DroppableColumn
-                      title={column.title}
-                      tasks={tasks}
-                      status={column.status}
-                      onDelete={handleTaskDelete}
-                      onTaskCreate={handleTaskCreate}
-                      onTaskUpdate={handleTaskUpdate}
-                    />
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95"></div>
+      
+      {/* Content */}
+      <div className="relative z-10">
+        <BoardHeader 
+          user={user} 
+          username={username}
+          onTaskCreate={handleTaskCreate} 
+          onLogout={logout} 
+        />
+        
+        <div className="container mx-auto p-4 lg:p-6">
+          <DndContext 
+            onDragStart={handleDragStart} 
+            onDragEnd={handleDragEnd}
+            collisionDetection={closestCenter}
+          >
+            <div className="flex gap-4 lg:gap-6 overflow-x-auto pb-4 min-h-[calc(100vh-140px)]">
+              <SortableContext 
+                items={sortedColumns.map(col => `column-${col.id}`)} 
+                strategy={horizontalListSortingStrategy}
+              >
+                {sortedColumns.map((column) => (
+                  <div key={column.id} className="flex-shrink-0 w-72 lg:w-80">
+                    <div className="flex flex-col h-[calc(100vh-160px)] bg-gradient-to-b from-gray-600/20 to-gray-700/20 rounded-xl border border-gray-600/30 backdrop-blur-sm shadow-lg">
+                      <ColumnHeader
+                        column={column}
+                        onRename={(id, title) => setColumns(prev => prev.map(col => 
+                          col.id === id ? { ...col, title } : col
+                        ))}
+                        onDelete={(id) => setColumns(prev => prev.filter(col => col.id !== id))}
+                      />
+                      <DroppableColumn
+                        title={column.title}
+                        tasks={tasks}
+                        status={column.status}
+                        onDelete={handleTaskDelete}
+                        onTaskCreate={handleTaskCreate}
+                        onTaskUpdate={handleTaskUpdate}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </SortableContext>
-            
-            <div className="flex-shrink-0 w-72 lg:w-80">
-              <AddColumnButton onAddColumn={(title) => {
-                const newId = `CUSTOM_${Date.now()}`;
-                const newColumn: Column = {
-                  id: newId,
-                  title,
-                  status: newId as TaskStatus,
-                  order: columns.length,
-                };
-                setColumns(prev => [...prev, newColumn]);
-              }} />
+                ))}
+              </SortableContext>
+              
+              <div className="flex-shrink-0 w-72 lg:w-80">
+                <AddColumnButton onAddColumn={(title) => {
+                  const newId = `CUSTOM_${Date.now()}`;
+                  const newColumn: Column = {
+                    id: newId,
+                    title,
+                    status: newId as TaskStatus,
+                    order: columns.length,
+                  };
+                  setColumns(prev => [...prev, newColumn]);
+                }} />
+              </div>
             </div>
-          </div>
-          
-          <DragOverlay>
-            {activeTask ? (
-              <div className="rotate-2 scale-105 shadow-2xl">
-                <DraggableTaskCard
-                  task={activeTask}
-                  onDelete={() => {}}
-                />
-              </div>
-            ) : activeColumn ? (
-              <div className="w-80 h-32 bg-gradient-to-b from-gray-600/40 to-gray-700/40 rounded-xl border border-gray-600/50 backdrop-blur-sm flex items-center justify-center shadow-2xl">
-                <span className="text-gray-300 font-medium">{activeColumn.title}</span>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+            
+            <DragOverlay>
+              {activeTask ? (
+                <div className="rotate-2 scale-105 shadow-2xl">
+                  <DraggableTaskCard
+                    task={activeTask}
+                    onDelete={() => {}}
+                  />
+                </div>
+              ) : activeColumn ? (
+                <div className="w-80 h-32 bg-gradient-to-b from-gray-600/40 to-gray-700/40 rounded-xl border border-gray-600/50 backdrop-blur-sm flex items-center justify-center shadow-2xl">
+                  <span className="text-gray-300 font-medium">{activeColumn.title}</span>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+        </div>
       </div>
     </div>
   );
