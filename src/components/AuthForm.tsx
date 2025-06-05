@@ -79,7 +79,7 @@ const AuthForm: React.FC = () => {
       await signUpUser(email, password, username);
       toast({
         title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar a conta.",
+        description: "Você já pode acessar sua conta.",
       });
       // Clear form
       setEmail('');
